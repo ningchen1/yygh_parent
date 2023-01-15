@@ -1,0 +1,56 @@
+server:
+  port: 8222
+
+spring:
+  application:
+    name: service-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: service-hosp1
+          uri: lb://service-hosp
+          predicates:
+            - Path=/*/hospital/** # \u8DEF\u5F84\u5339\u914D
+        - id: service-hosp2
+          uri: lb://service-hosp
+          predicates:
+            - Path=/*/hosp/** # \u8DEF\u5F84\u5339\u914D
+        - id: service-hosp3
+          uri: lb://service-hosp
+          predicates:
+            - Path=/*/user/** # \u8DEF\u5F84\u5339\u914D
+
+        - id: service-cmn
+          uri: lb://service-cmn
+          predicates:
+            - Path=/*/cmn/** # \u8DEF\u5F84\u5339\u914D
+        - id: service-user
+          uri: lb://service-user
+          predicates:
+            - Path=/*/userinfo/** # \u8DEF\u5F84\u5339\u914D
+        - id: service-msm
+          uri: lb://service-msm
+          predicates:
+            - Path=/*/sms/** # \u8DEF\u5F84\u5339\u914D
+        - id: service-oss
+          uri: lb://service-oss
+          predicates:
+            - Path=/*/oss/** # \u8DEF\u5F84\u5339\u914D
+        - id: service-order
+          uri: lb://service-orders
+          predicates:
+              - Path=/*/order/** # 路径匹配
+        - id: service-sta
+          uri: lb://service-sta
+          predicates:
+              - Path=/*/statistic/** # 路径匹配
+        - id: service-hosp4
+          uri: lb://service-hosp
+          predicates:
+              - Path=/admin/** # 路径匹配,兜底的
+    nacos:
+      discovery:
+        server-addr: localhost:8848
