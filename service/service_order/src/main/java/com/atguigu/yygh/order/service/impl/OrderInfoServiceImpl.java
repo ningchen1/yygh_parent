@@ -64,56 +64,75 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     public Long submitOrder(String scheduleId, Long patientId) {
         //1.先根据scheduleId获取医生排班信息
         ScheduleOrderVo scheduleById = scheduleFeignCleint.getScheduleById(scheduleId);
-
+        //做判断，若截至时间在排班时间之前则超过了可挂号时间
         if(new DateTime(scheduleById.getStopTime()).isBeforeNow()){
             throw new YyghException(20001,"超过了挂号截止时间");
         }
 
 
-        //2.先根据patientId获就诊人信息
+        //2.先根据patientId获就诊人信息：就诊人id
         Patient patientById = patientFeignClient.getPatientById(patientId);
 
 
         //3.从平台请求第三方医院，确认当前用户能否挂号
         HashMap<String, Object> paramMap = new HashMap<>();
-        paramMap.put("hoscode",scheduleById.getHoscode());
-        paramMap.put("depcode",scheduleById.getDepcode());
-        paramMap.put("hosScheduleId",scheduleById.getHosScheduleId());
+        paramMap.put("hoscode",scheduleById.getHoscode());//放入当前排班所在医院编号
+        paramMap.put("depcode",scheduleById.getDepcode());//放入当前排班所在科室编号
+        paramMap.put("hosScheduleId",scheduleById.getHosScheduleId());//放入当前排班信息所在排班id
 
-        paramMap.put("reserveDate",scheduleById.getReserveDate());
-        paramMap.put("reserveTime",scheduleById.getReserveTime());
-        paramMap.put("amount",scheduleById.getAmount());
+        paramMap.put("reserveDate",scheduleById.getReserveDate());//getReserveDate所安排日期
+        paramMap.put("reserveTime",scheduleById.getReserveTime());//getReserveTime所安排时间
+        paramMap.put("amount",scheduleById.getAmount());//getAmount医师服务费
 
 
         JSONObject jsonObject = HttpRequestHelper.sendRequest(paramMap, "http://localhost:9998/order/submitOrder");
+        //若返回的信息不为空，且状态码正常，则获取所返回的数据data
         if(jsonObject != null && jsonObject.getInteger("code") == 200){
             JSONObject data = jsonObject.getJSONObject("data");
 
-
+            //new一个订单对象
             OrderInfo orderInfo=new OrderInfo();
+            //将就诊人id，set里订单对象里
             orderInfo.setUserId(patientById.getUserId());
+
             String outTradeNo = System.currentTimeMillis() + ""+ new Random().nextInt(100);
-            orderInfo.setOutTradeNo(outTradeNo);
+            orderInfo.setOutTradeNo(outTradeNo);//setOutTradeNo交易订单号，由时间戳和随机数生成
+            //排班的医院编号
             orderInfo.setHoscode(scheduleById.getHoscode());
+            //排班的医院名称
             orderInfo.setHosname(scheduleById.getHosname());
+            //排班科室编号
             orderInfo.setDepcode(scheduleById.getDepcode());
+            //科室名称
             orderInfo.setDepname(scheduleById.getDepname());
+            //医生职称
             orderInfo.setTitle(scheduleById.getTitle());
+            //安排日期
             orderInfo.setReserveDate(scheduleById.getReserveDate());
+            //安排时间：上午和下午
             orderInfo.setReserveTime(scheduleById.getReserveTime());
+            //排班编号（医院自己的排班主键）
             orderInfo.setScheduleId(scheduleById.getHosScheduleId());
+            //patient所继承的基本实体的id
             orderInfo.setPatientId(patientById.getId());
+            //姓名
             orderInfo.setPatientName(patientById.getName());
+            //电话
             orderInfo.setPatientPhone(patientById.getPhone());
 
-
+            //预约记录唯一标识（医院预约记录主键）
             orderInfo.setHosRecordId(data.getString("hosRecordId"));
+            //预约号序
             orderInfo.setNumber(data.getInteger("number"));
+            //建议取号时间
             orderInfo.setFetchTime(data.getString("fetchTime"));
+            //取号地点
             orderInfo.setFetchAddress(data.getString("fetchAddress"));
-
+            //医师服务费
             orderInfo.setAmount(scheduleById.getAmount());
+            //退号时间
             orderInfo.setQuitTime(scheduleById.getQuitTime());
+            //订单状态
             orderInfo.setOrderStatus(OrderStatusEnum.UNPAID.getStatus());
 
          //3.2 如果返回能挂号，就把取医生排班信息、就诊人信息及第三方医院返回的信息都添加到order_info表中
@@ -125,17 +144,21 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             int availableNumber = data.getIntValue("availableNumber");
             orderMqVo.setAvailableNumber(availableNumber);
 
+            //3.4 给就诊人发送短信提醒
             MsmVo msmVo=new MsmVo();
+            //获取就诊人手机号
             msmVo.setPhone(patientById.getPhone());
 
             msmVo.setTemplateCode("您已经预约了上午${time}点的${name}医生的号，不要迟到!");
+            //setParam模板参数
             Map<String,Object> msmMap=new HashMap<String, Object>();
             msmMap.put("time",scheduleById.getReserveDate()+" "+scheduleById.getReserveTime());
             msmMap.put("name","xxx");
             msmVo.setParam(msmMap);
             orderMqVo.setMsmVo(msmVo);
+            //模拟发送短信提示
             rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_ORDER,MqConst.ROUTING_ORDER,orderMqVo);
-            //3.4 给就诊人发送短信提醒
+
 
 
             //4.返回订单的id
@@ -147,6 +170,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         }
     }
 
+    //带查询条件的订单分页接口
     @Override
     public Page<OrderInfo> getOrderInfoPage(Integer pageNum, Integer pageSize, OrderQueryVo orderQueryVo) {
         Page page=new Page(pageNum,pageSize);
@@ -186,6 +210,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             queryWrapper.le("create_time", createTimeEnd);
         }
         Page<OrderInfo> page1 = baseMapper.selectPage(page, queryWrapper);
+        //获取当前页的列表数据转化成流进行遍历
         page1.getRecords().parallelStream().forEach(item->{
             this.packageOrderInfo(item);
         });
@@ -193,6 +218,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         return page1;
     }
 
+    //根据orderId获取订单的详情信息
     @Override
     public OrderInfo detail(Long orderId) {
         OrderInfo orderInfo = baseMapper.selectById(orderId);
@@ -200,19 +226,22 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         return orderInfo;
     }
 
+    //取消挂号订单
     @Override
     public void cancelOrder(Long orderId) {
+        //根据订单id查询订单信息
         OrderInfo orderInfo = baseMapper.selectById(orderId);
+        //获取订单信息的退号时间
         DateTime quitTime = new DateTime(orderInfo.getQuitTime());
         //1.确定当前取消预约的时间 和 挂号订单的取消预约截止时间 对比, 当前时间是否已经超过了 挂号订单的取消预约截止时间
         //1.1 如果超过了，直接抛出异常，不让用户取消
         if(quitTime.isBeforeNow()){
             throw  new YyghException(20001,"超过了退号的截止时间");
         }
-
+        //new医院参数信息
         Map<String,Object>  hospitalParamMap=new HashMap<String,Object>();
-        hospitalParamMap.put("hoscode",orderInfo.getHoscode());
-        hospitalParamMap.put("hosRecordId",orderInfo.getHosRecordId());
+        hospitalParamMap.put("hoscode",orderInfo.getHoscode());//医院编号
+        hospitalParamMap.put("hosRecordId",orderInfo.getHosRecordId());//预约记录唯一标识（医院预约记录主键）
 
 
         //2.从平台请求第三方医院，通知第三方医院，该用户已取消
@@ -244,7 +273,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         //5.更新医生的剩余可预约数信息
 
         OrderMqVo orderMqVo=new OrderMqVo();
-        orderMqVo.setScheduleId(orderInfo.getScheduleId());
+        orderMqVo.setScheduleId(orderInfo.getScheduleId());//排班id
         MsmVo msmVo=new MsmVo();
         msmVo.setPhone(orderInfo.getPatientPhone());
         msmVo.setTemplateCode("xxxx.....");
@@ -254,10 +283,11 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_ORDER,MqConst.ROUTING_ORDER,orderMqVo);
     }
 
+    //就医提醒
     @Override
     public void patientRemind() {
         QueryWrapper<OrderInfo> queryWrapper=new QueryWrapper<OrderInfo>();
-
+        //安排日期和订单状态不为-1的
         queryWrapper.eq("reserve_date",new DateTime().toString("yyyy-MM-dd"));
         queryWrapper.ne("order_status",-1);
 
@@ -266,6 +296,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         for (OrderInfo orderInfo : orderInfos) {
 
             MsmVo msmVo=new MsmVo();
+            //就诊人手机
             msmVo.setPhone(orderInfo.getPatientPhone());
 
             String reserveDate = new DateTime(orderInfo.getReserveDate()).toString("yyyy-MM-dd") + (orderInfo.getReserveTime()==0 ? "上午": "下午");
@@ -281,11 +312,14 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         }
     }
 
+    //预约统计
     @Override
     public Map<String, Object> statistics(OrderCountQueryVo orderCountQueryVo) {
         List<OrderCountVo> countVoList= baseMapper.statistics(orderCountQueryVo);
 
+        //时间列表
         List<String> dateList = countVoList.stream().map(OrderCountVo::getReserveDate).collect(Collectors.toList());
+        //数量列表
         List<Integer> countList = countVoList.stream().map(OrderCountVo::getCount).collect(Collectors.toList());
 
 
@@ -296,6 +330,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         return map;
     }
     private void packageOrderInfo(OrderInfo item) {
+        //根据看订单状态枚举转化为字
         item.getParam().put("orderStatusString",OrderStatusEnum.getStatusNameByStatus(item.getOrderStatus()));
     }
 

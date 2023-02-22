@@ -24,6 +24,7 @@ public class TaskListener {
                     key = MqConst.ROUTING_TASK_8
             )
     })
+    //定时就医提醒
     public void patientRemind(Message message, Channel channel){
         orderInfoService.patientRemind();
     }

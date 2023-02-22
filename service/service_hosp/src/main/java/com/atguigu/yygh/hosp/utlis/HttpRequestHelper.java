@@ -4,11 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-/*====================================================
-                时间: 2022-05-27
-                讲师: 刘  辉
-                出品: 尚硅谷教学团队
-======================================================*/
 public class HttpRequestHelper {
 
     public static Map<String, Object> switchMap(Map<String, String[]> parameterMap) {

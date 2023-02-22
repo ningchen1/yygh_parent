@@ -60,13 +60,16 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             throw new YyghException(20001,"验证码有误");
         }
 
+        //获取微信id
         String openid = loginVo.getOpenid();
+
         UserInfo userInfo=null;
         if(StringUtils.isEmpty(openid)){
             //4.是否手机号首次登录,如果是首次登录，就先往表中注册一下当前用户信息
             QueryWrapper<UserInfo> queryWrapper=new QueryWrapper<UserInfo>();
             queryWrapper.eq("phone",phone);
             userInfo= baseMapper.selectOne(queryWrapper);
+            //如果是首次登录，就先往表中注册一下当前用户信息
             if(userInfo == null){
                 userInfo=new UserInfo();
                 userInfo.setPhone(phone);
@@ -74,8 +77,9 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
                 userInfo.setStatus(1);
             }
 
-        }else{//微信强制绑定手机号:首次使用微信登录并且强制绑定手机号的时候会走这个else
-
+        }
+        else{//微信强制绑定手机号:首次使用微信登录并且强制绑定手机号的时候会走这个else
+            //根据微信id查询信息，绑定手机号
             QueryWrapper<UserInfo> queryWrapper=new QueryWrapper<UserInfo>();
             queryWrapper.eq("openid",openid);
             userInfo = baseMapper.selectOne(queryWrapper);
@@ -89,6 +93,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
                 //userInfo.setStatus(1);
                 baseMapper.updateById(userInfo);
             }else{
+                //若微信已经绑定过手机号，则把手机号中的微信信息进行修改
                 userInfo2.setOpenid(userInfo.getOpenid());
                 userInfo2.setNickName(userInfo.getNickName());
                 baseMapper.updateById(userInfo2);
@@ -103,6 +108,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         //6.返回用户信息
         Map<String, Object> map = new HashMap<>();
         String name = userInfo.getName();
+        //获取用户名称，若名称为空则使用微信昵称或手机号
         if(StringUtils.isEmpty(name)) {
             name = userInfo.getNickName();
         }
@@ -120,10 +126,12 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
     @Override
     public UserInfo getUserInfo(Long userId) {
         UserInfo userInfo = baseMapper.selectById(userId);
+        //获取用户信息中到的认证状态
         userInfo.getParam().put("authStatusString", AuthStatusEnum.getStatusNameByStatus(userInfo.getAuthStatus()));
         return userInfo;
     }
 
+    //管理系统下的就诊人分页查询
     @Override
     public Page<UserInfo> getUserInfoPage(Integer pageNum, Integer limit, UserInfoQueryVo userInfoQueryVo) {
 
@@ -131,6 +139,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
 
         QueryWrapper<UserInfo> queryWrapper=new QueryWrapper<>();
 
+        //模糊查询根据姓名或者手机号相同
         if(!StringUtils.isEmpty(userInfoQueryVo.getKeyword())){
             queryWrapper.like("name",userInfoQueryVo.getKeyword()).or().eq("phone",userInfoQueryVo.getKeyword());
         }
@@ -155,6 +164,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         return page1;
     }
 
+    //修改用户状态
     @Override
     public void updateStatus(Long id, Integer status) {
         if(status == 0 || status == 1){
@@ -168,12 +178,14 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
 
     }
 
+    //查询用户详情信息，包括下面的就诊人信息
     @Override
     public Map<String, Object> detail(Long id) {
         UserInfo userInfo = baseMapper.selectById(id);
 
         QueryWrapper<Patient> queryWrapper=new QueryWrapper<Patient>();
         queryWrapper.eq("user_id",id);
+        //根据用户id查询其下就诊人信息
         List<Patient> patients =patientService.selectList(queryWrapper);
 
         Map<String, Object> map = new HashMap<String,Object>(2);
@@ -182,6 +194,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         return map;
     }
     private void packageUserInfo(UserInfo item) {
+        //获取注册状态和状态进行文字转化
         Integer authStatus = item.getAuthStatus();
         Integer status = item.getStatus();
         item.getParam().put("statusString", StatusEnum.getStatusStringByStatus(status));

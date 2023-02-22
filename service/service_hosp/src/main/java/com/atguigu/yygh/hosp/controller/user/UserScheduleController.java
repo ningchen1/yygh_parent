@@ -32,16 +32,18 @@ public class UserScheduleController {
         return R.ok().data("schedule",schedule);
     }
 
+    //根据医院编号和科室编号查看排班数据，进行分页
     @GetMapping("/{hoscode}/{depcode}/{pageNum}/{pageSize}")
     public R getSchedulePage(@PathVariable String hoscode,
                              @PathVariable String depcode,
                              @PathVariable Integer pageNum,
                              @PathVariable Integer pageSize){
-
+        //Condition翻译：条件
         Map<String,Object> map=scheduleService.getSchedulePageByCondition(hoscode,depcode,pageNum,pageSize);
         return R.ok().data(map);
     }
 
+    //查询排班详情信息，根据医院编号和科室编号和工作日期
     @GetMapping("/{hoscode}/{depcode}/{workdate}")
     public R getScheduleDetail(@PathVariable String hoscode,
                                @PathVariable String depcode,

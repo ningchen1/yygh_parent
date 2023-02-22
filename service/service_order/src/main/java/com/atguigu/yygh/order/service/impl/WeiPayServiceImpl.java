@@ -37,6 +37,7 @@ public class WeiPayServiceImpl implements WeiPayService {
     private WeiPayProperties weiPayProperties;
     @Autowired
     private RefundInfoService refundInfoService;
+    //获取支付二维码
     @Override
     public String createNative(Long orderId) {
         //1.根据订单id去数据库中获取订单信息
@@ -45,18 +46,19 @@ public class WeiPayServiceImpl implements WeiPayService {
         paymentService.savePaymentInfo(orderInfo, PaymentTypeEnum.WEIXIN.getStatus());
         //3.请求微信服务器获取微信支付的url地址
         HttpClient httpClient=new HttpClient("https://api.mch.weixin.qq.com/pay/unifiedorder");
+
         Map<String,String> paramMap=new HashMap<String,String>();
 
         paramMap.put("appid",weiPayProperties.getAppid());
         paramMap.put("mch_id",weiPayProperties.getPartner());
         paramMap.put("nonce_str",WXPayUtil.generateNonceStr());
 
-        Date reserveDate = orderInfo.getReserveDate();
-        String reserveDateString = new DateTime(reserveDate).toString("yyyy/MM/dd");
-        String body = reserveDateString + "就诊"+ orderInfo.getDepname();
+        Date reserveDate = orderInfo.getReserveDate();//安排日期
+        String reserveDateString = new DateTime(reserveDate).toString("yyyy/MM/dd");//重写日期
+        String body = reserveDateString + "就诊"+ orderInfo.getDepname();//就诊日期和科室名
 
         paramMap.put("body",body);
-        paramMap.put("out_trade_no",orderInfo.getOutTradeNo());
+        paramMap.put("out_trade_no",orderInfo.getOutTradeNo());//订单交易号
         paramMap.put("total_fee","1");//支付金額，測試為1分
 
         paramMap.put("spbill_create_ip","127.0.0.1");
@@ -72,13 +74,14 @@ public class WeiPayServiceImpl implements WeiPayService {
 
             String xmlResult = httpClient.getContent();
             Map<String, String> stringStringMap = WXPayUtil.xmlToMap(xmlResult);
-            return stringStringMap.get("code_url");
+            return stringStringMap.get("code_url");//对应的是微信支付的地址
         }catch (Exception ex){
               return "";
         }
 
     }
 
+    //根据订单id查询订单状态
     @Override
     public Map<String, String> queryPayStatus(Long orderId) {
 
@@ -97,7 +100,9 @@ public class WeiPayServiceImpl implements WeiPayService {
             httpClient.setXmlParam(WXPayUtil.generateSignedXml(map, weiPayProperties.getPartnerkey()));
             httpClient.setHttps(true);
             httpClient.post();
+            //转化为String
             String content = httpClient.getContent();
+            //转化为Map
             Map<String, String> stringStringMap = WXPayUtil.xmlToMap(content);
 
             return stringStringMap; //支付
@@ -107,7 +112,7 @@ public class WeiPayServiceImpl implements WeiPayService {
         }
     }
 
-    @Transactional
+    @Transactional//添加事务
     @Override
     public void paySuccess(Long orderId, Map<String,String> map) {
         //更新订单表的订单状态
@@ -126,14 +131,18 @@ public class WeiPayServiceImpl implements WeiPayService {
         paymentService.update(updateWrapper);
     }
 
+    //用户取消订单进行的退款操作
     @Override
     public boolean refund(Long orderId) {
 
         QueryWrapper<PaymentInfo> queryWrapper=new QueryWrapper<PaymentInfo>();
         queryWrapper.eq("order_id",orderId);
+        //根据订单id查询支付信息
         PaymentInfo paymentInfo = paymentService.getOne(queryWrapper);
+        //保存退款记录
         RefundInfo refundInfo=refundInfoService.saveRefundInfo(paymentInfo);
         //已退款
+        //根据退款状态进行比较
         if(refundInfo.getRefundStatus().intValue() == RefundStatusEnum.REFUND.getStatus().intValue()){
             return true;
         }
@@ -164,11 +173,13 @@ public class WeiPayServiceImpl implements WeiPayService {
 
             String content = httpClient.getContent();
             Map<String, String> resultMap = WXPayUtil.xmlToMap(content);
+
             if("SUCCESS".equals(resultMap.get("result_code"))){ //微信退款成功
                 refundInfo.setTradeNo(resultMap.get("refund_id"));//微信退款交易号
                 refundInfo.setRefundStatus(RefundStatusEnum.REFUND.getStatus());
                 refundInfo.setCallbackTime(new Date());
                 refundInfo.setCallbackContent(JSONObject.toJSONString(resultMap));
+                //更新退款订单信息
                 refundInfoService.updateById(refundInfo);
                 return true;
 

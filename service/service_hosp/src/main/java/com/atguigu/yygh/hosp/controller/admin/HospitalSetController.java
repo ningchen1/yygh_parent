@@ -68,6 +68,7 @@ public class HospitalSetController {
         hospitalSet.setStatus(1);
         //当前时间戳+随机数+MD5加密
         Random random=new Random();
+        //设置密钥
         hospitalSet.setSignKey(MD5.encrypt(System.currentTimeMillis() + "" + random.nextInt(1000)));
         hospitalSetService.save(hospitalSet);
         return R.ok();
@@ -90,6 +91,7 @@ public class HospitalSetController {
         }
 
         hospitalSetService.page(page, queryWrapper);
+        //查询数据列表rows，和总数total
         return R.ok().data("total",page.getTotal()).data("rows",page.getRecords());
 
     }
@@ -101,7 +103,7 @@ public class HospitalSetController {
         return R.ok().data("items",list);
     }
 
-    //
+
     //根据医院设置id删除医院设置信息
     @ApiOperation(value = "根据医院设置id删除医院设置信息")
     @DeleteMapping(value = "/deleteById/{id}")

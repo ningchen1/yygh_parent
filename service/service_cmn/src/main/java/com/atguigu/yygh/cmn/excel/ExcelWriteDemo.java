@@ -8,11 +8,6 @@ import com.alibaba.excel.write.metadata.WriteSheet;
 import java.util.ArrayList;
 import java.util.List;
 
-/*====================================================
-                时间: 2022-05-24
-                讲师: 刘  辉
-                出品: 尚硅谷教学团队
-======================================================*/
 public class ExcelWriteDemo {
 
     //方式二：往多个sheet中写数据
@@ -28,7 +23,7 @@ public class ExcelWriteDemo {
         studentList.add(new Student(6,"王志峰",18,true));
 
 
-        ExcelWriter excelWriter = EasyExcel.write("C:\\Users\\LH\\Desktop\\abc.xlsx", Student.class).build();
+        ExcelWriter excelWriter = EasyExcel.write("C:\\Users\\柠尘\\Desktop\\abc.xlsx", Student.class).build();
         WriteSheet sheet1 = EasyExcel.writerSheet(0, "学生列表1").build();
         WriteSheet sheet2 = EasyExcel.writerSheet(1, "学生列表2").build();
         excelWriter.write(students,sheet1);

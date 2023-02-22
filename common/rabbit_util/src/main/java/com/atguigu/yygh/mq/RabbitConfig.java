@@ -5,11 +5,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.Bean;
 
-/*====================================================
-                时间: 2022-06-10
-                讲师: 刘  辉
-                出品: 尚硅谷讲师团队
-======================================================*/
+
 @SpringBootConfiguration
 public class RabbitConfig {
 

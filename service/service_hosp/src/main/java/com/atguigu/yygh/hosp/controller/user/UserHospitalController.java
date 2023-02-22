@@ -20,19 +20,21 @@ public class UserHospitalController {
     @Autowired
     private HospitalService hospitalService;
 
-
+    //获取所有医院信息
     @GetMapping("/list")
     public R  getHospitalList(HospitalQueryVo hospitalQueryVo){
         Page<Hospital> page = hospitalService.getHospitalPage(1, 1000000, hospitalQueryVo);
         return R.ok().data("list",page.getContent());
     }
 
+    //模糊查询
     @GetMapping("/{name}")
     public R  findByName(@PathVariable String name){
         List<Hospital> list=hospitalService.findByNameLike(name);
         return R.ok().data("list",list);
     }
 
+    //医院详情功能
     @GetMapping("/detail/{hoscode}")
     public R getHospitalDetail(@PathVariable String hoscode){
         Hospital hospital= hospitalService.getHospitalDetail(hoscode);

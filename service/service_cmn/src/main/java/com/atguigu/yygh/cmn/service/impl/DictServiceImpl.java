@@ -44,14 +44,18 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     //@Cacheable(value = "dict",keyGenerator = "keyGenerator")
 
+    //根据数据id查询子数据列表
     @Override
     //,key = "'selectIndexList'+#pid"
    @Cacheable(value = "abc",key = "'selectIndexList'+#pid")
     public List<Dict> getChildListByPid(Long pid) {
+        //构造查询条件
         QueryWrapper<Dict> queryWrapper=new QueryWrapper<Dict>();
         queryWrapper.eq("parent_id",pid);
+
         List<Dict> dicts = baseMapper.selectList(queryWrapper);
         for (Dict dict : dicts) {
+            //isHasChildren方法，是判断该id下有没有子元素，有的话返回true,没有返回false，用来显示父id左侧的箭头
              dict.setHasChildren(isHasChildren(dict.getId()));
         }
         return dicts;
@@ -73,20 +77,24 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         // 这里URLEncoder.encode可以防止中文乱码 当然和easyexcel没有关系
         String fileName = URLEncoder.encode("字典文件", "UTF-8");
         response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
-        //这么写有没有问题？
+
         EasyExcel.write(response.getOutputStream(), DictEeVo.class).sheet("学生列表1").doWrite(dictEeVoList);
     }
 
+//@Cacheable:用在查询方法上，表示查询数据的时候，先去缓存中查询，缓存中没有再去数据库中查询
+//@CacheEvict：删除、修改方法上，表示当修改删除数据表中的数据，把缓存中对应的数据删除掉
     @Override
     @CacheEvict(value = "abc", allEntries=true)
     public void upload(MultipartFile file) throws IOException {
         EasyExcel.read(file.getInputStream(),DictEeVo.class,new DictListener(baseMapper)).sheet(0).doRead();
     }
 
+    //根据医院所属的省市区编号获取省市区文字
     @Override
     public String getNameByValue(Long value) {
         QueryWrapper<Dict> queryWrapper=new QueryWrapper<Dict>();
         queryWrapper.eq("value",value);
+        //根据医院所属的省市区编号获取省市区文字
         Dict dict = baseMapper.selectOne(queryWrapper);
         if(dict != null){
             return dict.getName();
@@ -94,13 +102,15 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         return null;
     }
 
+    //根据医院的等级编号获取医院等级信息
     @Override
     public String getNameByDictCodeAndValue(String dictCode,Long value) {
+        //根据字典编码获取相应的字典信息
         QueryWrapper<Dict> queryWrapper=new QueryWrapper<Dict>();
         queryWrapper.eq("dict_code",dictCode);
         Dict dict = baseMapper.selectOne(queryWrapper);
 
-
+        //根据字典信息id和value查询医院等级信息名称
         QueryWrapper<Dict> queryWrapper2=new QueryWrapper<Dict>();
         queryWrapper2.eq("parent_id", dict.getId());
         queryWrapper2.eq("value", value);
@@ -111,6 +121,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     }
 
 
+    //根据数据id查询子数据列表
     private boolean isHasChildren(Long pid) {
         QueryWrapper<Dict> queryWrapper=new QueryWrapper<Dict>();
         queryWrapper.eq("parent_id",pid);

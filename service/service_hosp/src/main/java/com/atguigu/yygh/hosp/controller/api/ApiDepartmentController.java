@@ -35,11 +35,12 @@ public class ApiDepartmentController {
     @PostMapping("/department/list")
     public Result<Page> getDepartmentPage(HttpServletRequest httpServletRequest){
         Map<String, Object> stringObjectMap = HttpRequestHelper.switchMap(httpServletRequest.getParameterMap());
-        //1.验证signkey
+        //1.根据传递过来的数据进行分页查询
         Page<Department> page= departmentService.getDepartmentPage(stringObjectMap);
         return Result.ok(page);
     }
 
+    //上传科室信息
     @PostMapping("/saveDepartment")
     public Result saveDepartment(HttpServletRequest request){
         Map<String, Object> stringObjectMap = HttpRequestHelper.switchMap(request.getParameterMap());

@@ -19,6 +19,7 @@ public class WeiPayController {
 
     @GetMapping("/status/{orderId}")
     public R getPayStatus(@PathVariable Long orderId){
+        //根据订单id查询订单状态
         Map<String,String> map=weiPayService.queryPayStatus(orderId);
         if(map == null){
             return R.error().message("查询失败");
@@ -33,6 +34,7 @@ public class WeiPayController {
     }
 
 
+    //获取支付二维码
     @GetMapping("/{orderId}")
     public R createNative(@PathVariable Long orderId){
         String url=  weiPayService.createNative(orderId);

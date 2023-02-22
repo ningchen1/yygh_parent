@@ -19,6 +19,7 @@ public class ScheduleController {
     @Autowired
     private ScheduleService scheduleService;
 
+    //根据医院编号 、科室编号和工作日期，查询排班详细信息
     @GetMapping("/{hoscode}/{depcode}/{workdate}")
     public R detail(@PathVariable String hoscode,
                     @PathVariable String depcode,
@@ -28,11 +29,13 @@ public class ScheduleController {
     }
 
 
+    //根据医院编号 和 科室编号 ，查询排班规则数据
     @GetMapping("/{pageNum}/{pageSize}/{hoscode}/{depcode}")
     public R page(@PathVariable Integer pageNum,
                   @PathVariable Integer pageSize,
                   @PathVariable String hoscode,
                   @PathVariable String depcode){
+        //因为要传递其他参数这里使用Map接收
         Map<String,Object> map=scheduleService.page(pageNum,pageSize,hoscode,depcode);
         return R.ok().data(map);
     }

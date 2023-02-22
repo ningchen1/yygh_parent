@@ -1,17 +1,12 @@
 package com.atguigu.yygh.common.result;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/*====================================================
-                时间: 2022-05-20
-                讲师: 刘  辉
-                出品: 尚硅谷教学团队
-======================================================*/
+
 @Getter
 @ToString
 public class R {

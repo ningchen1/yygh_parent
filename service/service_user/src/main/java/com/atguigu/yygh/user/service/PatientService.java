@@ -21,6 +21,7 @@ public interface PatientService extends IService<Patient> {
 
     Patient detail(Long id);
 
+    //根据用户id查询其下就诊人信息
     List<Patient> selectList(QueryWrapper<Patient> queryWrapper);
 
     List<Patient> findAll(String token);

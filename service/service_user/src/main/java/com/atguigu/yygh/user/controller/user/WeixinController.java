@@ -20,11 +20,6 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-/*====================================================
-                时间: 2022-06-02
-                讲师: 刘  辉
-                出品: 尚硅谷教学团队
-======================================================*/
 @Controller
 @RequestMapping("/user/userinfo/wx")
 public class WeixinController {
@@ -35,9 +30,11 @@ public class WeixinController {
     private UserInfoService userInfoService;
 
 
+    //获取微信登录参数
     @GetMapping("/param")
     @ResponseBody
     public R getWeixinLoginParam() throws UnsupportedEncodingException {
+        //按照微信说明，对微信服务器地址进行重定向编码
         String url = URLEncoder.encode(weixinProperties.getRedirecturl(), "UTF-8");
 
         Map<String,Object> map=new HashMap<String,Object>();
@@ -49,8 +46,12 @@ public class WeixinController {
     }
 
     @GetMapping("/callback")
+    //回调微信服务器会返回code和state两个参数
     public String callback(String code,String state) throws Exception {
 
+        //第二步 拿着code和微信id和秘钥，请求微信固定地址 ，得到两个值
+        //使用code和appid以及appscrect换取access_token
+        //  %s   占位符
         StringBuilder stringBuilder=new StringBuilder();
         StringBuilder append = stringBuilder.append("https://api.weixin.qq.com/sns/oauth2/access_token")
                 .append("?appid=%s")
@@ -58,16 +59,17 @@ public class WeixinController {
                 .append("&code=%s")
                 .append("&grant_type=authorization_code");
         String format = String.format(append.toString(), weixinProperties.getAppid(), weixinProperties.getAppsecret(), code);
-
+        //第二步 拿着code和微信id和秘钥，请求微信固定地址 ，得到两个值
         String result = HttpClientUtils.get(format);
         System.out.println(result);
-
+        //把获取到的值进行解析，转化为JSONObject类型
         JSONObject jsonObject = JSONObject.parseObject(result);
-        //access_token访问微信服务器的一个凭证
+        //根据键获取值access_token，access_token访问微信服务器的一个凭证
         String access_token = jsonObject.getString("access_token");
-        //openid是微信扫描用户在微信服务器的唯一标识符
+        //根据键获取值openid，openid是微信扫描用户在微信服务器的唯一标识符
         String openid = jsonObject.getString("openid");
 
+        //根据openid进行查询
         QueryWrapper<UserInfo> queryWrapper=new QueryWrapper<UserInfo>();
         queryWrapper.eq("openid",openid);
         UserInfo userInfo = userInfoService.getOne(queryWrapper);
@@ -79,13 +81,17 @@ public class WeixinController {
             StringBuilder append1 = sb.append("https://api.weixin.qq.com/sns/userinfo")
                     .append("?access_token=%s")
                     .append("&openid=%s");
-
+            //对StringBuilder进行拼接
             String format1 = String.format(append1.toString(), access_token, openid);
+            //通过HttpClientUtils方法请求微信服务器获当前用户信息
             String s = HttpClientUtils.get(format1);
             System.out.println(s);
+            //对获取到的用户信息进行转化为JSONObject格式
             JSONObject jsonObject1 = JSONObject.parseObject(s);
+            //获取用户信息中的昵称
             String nickname = jsonObject1.getString("nickname");
 
+            //将获取到的用户信息保存到数据表中
             userInfo = new UserInfo();
             userInfo.setOpenid(openid);
             userInfo.setNickName(nickname);
@@ -105,7 +111,7 @@ public class WeixinController {
         //检查这个用户手机号是否为空:为空，说明这是首次使用微信登录,强制绑定手机号
         if(StringUtils.isEmpty(userInfo.getPhone())){
             map.put("openid",openid);
-        }else{//检查这个用户手机号是否为空:不为空，说明这不是首次微信登录
+        }else{//检查这个用户手机号是否为空:不为空，说明这不是首次微信登录，前端判定不为空则不需要强制绑定手机号
             map.put("openid","");
         }
         String name = userInfo.getName();

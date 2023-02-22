@@ -18,6 +18,7 @@ public class UserDepartmentController {
     @Autowired
     private DepartmentService departmentService;
 
+    //根据医院编号获取医院下的所有科室详情
     @GetMapping("/all/{hoscode}")
     public R findAll(@PathVariable String hoscode){
         List<DepartmentVo> departmentList=departmentService.getDepartmentList(hoscode);

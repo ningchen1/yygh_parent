@@ -10,11 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/*====================================================
-                时间: 2022-06-07
-                讲师: 刘  辉
-                出品: 尚硅谷讲师团队
-======================================================*/
+
 @RestController
 @RequestMapping("/administrator/userinfo")
 public class AdminUserInfoController {
@@ -27,7 +23,7 @@ public class AdminUserInfoController {
     @PutMapping("/auth/{id}/{authStatus}")
     public R approval(@PathVariable Long id,
                           @PathVariable Integer authStatus){
-
+        //0未认证，1认证中，2认证通过，-1认证不通过
         if(authStatus == 2 || authStatus == -1){
             UserInfo userInfo = new UserInfo();
             userInfo.setId(id);
@@ -39,6 +35,7 @@ public class AdminUserInfoController {
     }
 
 
+    //查询用户详情信息，包括下面的就诊人信息
     @GetMapping("/detail/{id}")
     public R detail(@PathVariable Long id){
         Map<String,Object> map= userInfoService.detail(id);
@@ -56,7 +53,9 @@ public class AdminUserInfoController {
 
 
 
+    //管理系统下的就诊人分页查询
     @GetMapping("/{pageNum}/{limit}")
+    //用的是GetMapping，所以UserInfoQueryVo不用加@RequestBody
     public R getUserInfoPage(@PathVariable Integer pageNum,
                              @PathVariable Integer limit,
                              UserInfoQueryVo userInfoQueryVo){

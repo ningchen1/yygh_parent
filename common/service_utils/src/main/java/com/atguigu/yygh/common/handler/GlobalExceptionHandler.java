@@ -10,11 +10,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.SQLException;
 
-/*====================================================
-                时间: 2022-05-20
-                讲师: 刘  辉
-                出品: 尚硅谷教学团队
-======================================================*/
 @RestControllerAdvice //凡是由@ControllerAdvice 标记的类都表示全局异常处理类
 @Slf4j
 public class GlobalExceptionHandler {

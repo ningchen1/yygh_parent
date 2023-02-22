@@ -3,11 +3,6 @@ package com.atguigu.yygh.cmn.excel;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.write.style.ColumnWidth;
 
-/*====================================================
-                时间: 2022-05-24
-                讲师: 刘  辉
-                出品: 尚硅谷教学团队
-======================================================*/
 public class Student {
     @ExcelProperty(value = "学生id")
     private Integer sid;

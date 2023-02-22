@@ -33,13 +33,15 @@ public class OrderMqListener {
     //确认挂号：走该方法 -n
     //取消预约：走方法 : +1
     public void consume(OrderMqVo orderMqVo, Message message, Channel channel){
-        String scheduleId = orderMqVo.getScheduleId();
-        Integer availableNumber = orderMqVo.getAvailableNumber();
+        String scheduleId = orderMqVo.getScheduleId();//获取订单信息中的排班id
+        Integer availableNumber = orderMqVo.getAvailableNumber();//剩余预约数
         MsmVo msmVo = orderMqVo.getMsmVo();
         if(availableNumber != null){
+            //根据排班id查询排班信息更新剩余可预约数
             boolean flag= scheduleService.updateAvailableNumber(scheduleId,availableNumber);
 
         }else{
+            //取消预约
             scheduleService.cancelSchedule(scheduleId);
         }
 

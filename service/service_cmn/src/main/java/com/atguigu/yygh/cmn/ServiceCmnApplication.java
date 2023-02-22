@@ -10,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(basePackages = {"com.atguigu"})
 @MapperScan("com.atguigu.yygh.cmn.mapper")
 @EnableDiscoveryClient
+
 public class ServiceCmnApplication {
     public static void main(String[] args) {
         SpringApplication.run(ServiceCmnApplication.class, args);

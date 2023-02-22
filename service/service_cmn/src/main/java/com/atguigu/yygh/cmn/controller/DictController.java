@@ -48,6 +48,7 @@ public class DictController {
         dictService.download(response);
     }
 
+    //根据数据id查询子数据列表
     @GetMapping("/childList/{pid}")
     public R getChildListByPid(@PathVariable Long pid){
         List<Dict> list=dictService.getChildListByPid(pid);

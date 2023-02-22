@@ -19,6 +19,7 @@ public class DepartmentController {
     private DepartmentService departmentService;
 
 
+    //根据医院编号，查询医院所有科室列表
     @GetMapping("/{hoscode}")
     public R getDepartmentList(@PathVariable String hoscode){
        List<DepartmentVo> list=departmentService.getDepartmentList(hoscode);

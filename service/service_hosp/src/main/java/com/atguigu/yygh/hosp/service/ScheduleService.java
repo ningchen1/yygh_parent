@@ -7,11 +7,6 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.Map;
 
-/*************************************************
- 时间: 2022-05-28
- 讲师: 刘  辉
- 出品: 尚硅谷教学团队
- **************************************************/
 public interface ScheduleService {
     void saveSchedule(Map<String, Object> stringObjectMap);
 

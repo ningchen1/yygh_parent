@@ -9,11 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Date;
 
-/*====================================================
-                时间: 2022-05-25
-                讲师: 刘  辉
-                出品: 尚硅谷教学团队
-======================================================*/
 @Data
 @NoArgsConstructor
 @AllArgsConstructor //pojo类对应的集合(首字母小写):

@@ -28,11 +28,17 @@ public class HospitalController {
         hospitalService.updateStatus(id,status);
         return R.ok();
     }
+
+    //分页查询医院的所有信息
     @GetMapping("/{pageNum}/{pageSize}")
-    public R getHospitalPage(@PathVariable Integer pageNum,@PathVariable Integer pageSize, HospitalQueryVo hospitalQueryVo){
+    public R getHospitalPage(@PathVariable Integer pageNum,
+                             @PathVariable Integer pageSize,
+                             HospitalQueryVo hospitalQueryVo){
 
-        Page<Hospital> hospitalPage= hospitalService.getHospitalPage(pageNum,pageSize,hospitalQueryVo);
+        Page<Hospital> hospitalPage
+                = hospitalService.getHospitalPage(pageNum,pageSize,hospitalQueryVo);
 
-        return R.ok().data("total",hospitalPage.getTotalElements()).data("list",hospitalPage.getContent());
+        return R.ok().data("total",hospitalPage.getTotalElements())
+                .data("list",hospitalPage.getContent());
     }
 }

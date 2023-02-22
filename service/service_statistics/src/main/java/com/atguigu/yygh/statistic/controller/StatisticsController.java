@@ -20,7 +20,7 @@ public class StatisticsController {
     private StatisticsService statisticsService;
 
 
-
+    //预约统计
     @GetMapping("/countByDate")
     public R statistics(OrderCountQueryVo orderCountQueryVo){
         Map<String,Object> map=statisticsService.statistics(orderCountQueryVo);

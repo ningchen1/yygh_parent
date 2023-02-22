@@ -18,13 +18,14 @@ import java.util.List;
  * @author atguigu
  * @since 2022-06-06
  */
+//就诊人管理接口
 @RestController
 @RequestMapping("/user/userinfo/patient")
 public class PatientController {
 
     @Autowired
     private PatientService patientService;
-    //增
+    //增//添加就诊人
     @PostMapping("/save")
     public R save(@RequestBody Patient patient, @RequestHeader String token){
         Long userId = JwtHelper.getUserId(token);
@@ -52,7 +53,7 @@ public class PatientController {
         return R.ok();
     }
 
-    //查
+    //查询详情信息
     @GetMapping("/all")
     public R findAll(@RequestHeader String token){
 

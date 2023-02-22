@@ -21,7 +21,7 @@ public class ApiScheduleController {
     private ScheduleService scheduleService;
 
 
-
+    //删除排班
     @PostMapping("/schedule/remove")
     public Result remove(HttpServletRequest request){
         Map<String, Object> stringObjectMap = HttpRequestHelper.switchMap(request.getParameterMap());
@@ -38,6 +38,7 @@ public class ApiScheduleController {
         return Result.ok(schedulePage);
     }
 
+    //上传排班信息
     @PostMapping("/saveSchedule")
     public Result saveSchedule(HttpServletRequest request){
         Map<String, Object> stringObjectMap = HttpRequestHelper.switchMap(request.getParameterMap());
